@@ -395,6 +395,22 @@ main, .container {
   background: var(--bg);
 }
 
+/* ---- Mode "page chargée dans une iframe" ---------------------------------
+   On masque tout sauf <main>, <footer>, le bouton "Retour" et la
+   lightbox. Ces éléments sont déjà affichés par la page parente, donc
+   les répéter dans l'iframe créerait des doublons visibles. */
+.in-iframe body > *:not(main):not(footer):not(.btn-home):not(.lightbox):not(#lightbox):not(script):not(style) {
+  display: none !important;
+}
+.in-iframe .btn-home {
+  display: inline-flex !important;
+}
+/* Ramène le contenu vers le haut puisque les bandeaux sont cachés */
+.in-iframe main,
+.in-iframe .container {
+  padding-top: 0.8rem;
+}
+
 /* ---- Lightbox (image / preview agrandi) ------------------------------------ */
 .lightbox {
   position: fixed;

@@ -5,6 +5,22 @@
 (function () {
   'use strict';
 
+  /* ---- Détection : page dans une iframe ? ---------------------------------
+     Si oui, on cache les menus / toolbars / header redondants — ils sont
+     déjà affichés par la page parente (index.html racine). Évite la
+     duplication visible quand on navigue dans le shell parent. */
+  function detectIframe() {
+    try {
+      if (window.self !== window.top) {
+        document.documentElement.classList.add('in-iframe');
+      }
+    } catch (e) {
+      // Cross-origin parent → on considère qu'on est en iframe
+      document.documentElement.classList.add('in-iframe');
+    }
+  }
+  detectIframe();
+
   /* ---- Mode sombre / clair (persisté via localStorage) --------------------- */
   const THEME_KEY = '13345_theme';
   function applyTheme(theme) {
