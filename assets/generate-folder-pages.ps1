@@ -1,31 +1,130 @@
 ﻿# =============================================================================
-# generate-folder-pages.ps1
+# generate-folder-pages.ps1  (v2)
 # Génère un index.html dans chaque dossier 000/ → 053/ contenant une
-# galerie des curseurs (.ani / .cur) avec aperçu au survol, taille de
-# fichier, dimensions extraites (pour les .cur) et lien Télécharger.
+# galerie des curseurs (.ani / .cur) avec aperçu PNG (data URL base64).
+# Le PNG est extrait à la volée depuis l'en-tête .cur / .ani via .NET
+# afin que la galerie reste visible dans TOUS les navigateurs, même
+# ceux qui refusent d'afficher .ani / .cur en <img>.
 # =============================================================================
+
+Add-Type -AssemblyName System.Drawing
 
 $root = Split-Path -Parent $PSScriptRoot
 Write-Host "Racine : $root"
 
-# --- Lecture des dimensions d'un fichier .cur (format ICO) -----------------
-function Get-CurDimensions {
-    param([string]$Path)
+# --- Conversion d'un Icon .NET vers PNG base64 -----------------------------
+function ConvertTo-PngBase64 {
+    param([System.Drawing.Icon]$Icon)
     try {
-        $bytes = [System.IO.File]::ReadAllBytes($Path)
-        if ($bytes.Length -lt 8) { return $null }
-        # En-tête ICONDIR (6 octets) puis ICONDIRENTRY (16 octets)
-        $w = $bytes[6]
-        $h = $bytes[7]
-        if ($w -eq 0) { $w = 256 }
-        if ($h -eq 0) { $h = 256 }
-        return "$w x $h"
+        $bmp = $Icon.ToBitmap()
+        $ms  = New-Object System.IO.MemoryStream
+        $bmp.Save($ms, [System.Drawing.Imaging.ImageFormat]::Png)
+        $b64 = [Convert]::ToBase64String($ms.ToArray())
+        $bmp.Dispose()
+        $ms.Dispose()
+        return $b64
     } catch {
         return $null
     }
 }
 
-# --- Lecture d'infos d'un fichier .ani (RIFF / anih chunk) ----------------
+# --- Extraction du premier "icon" d'un .ani (RIFF / chunks 'fram') ---------
+function Get-AniFirstIconBytes {
+    param([byte[]]$Bytes)
+    if ($Bytes.Length -lt 12) { return $null }
+    $riff = [System.Text.Encoding]::ASCII.GetString($Bytes, 0, 4)
+    if ($riff -ne 'RIFF') { return $null }
+    $form = [System.Text.Encoding]::ASCII.GetString($Bytes, 8, 4)
+    if ($form -ne 'ACON') { return $null }
+
+    $offset = 12
+    while ($offset -lt $Bytes.Length - 8) {
+        $id = [System.Text.Encoding]::ASCII.GetString($Bytes, $offset, 4)
+        $sz = [BitConverter]::ToInt32($Bytes, $offset + 4)
+        $offset += 8
+
+        if ($id -eq 'LIST') {
+            $listType = [System.Text.Encoding]::ASCII.GetString($Bytes, $offset, 4)
+            if ($listType -eq 'fram') {
+                $sub = $offset + 4
+                $end = $offset + $sz
+                while ($sub -lt $end - 8) {
+                    $subId = [System.Text.Encoding]::ASCII.GetString($Bytes, $sub, 4)
+                    $subSz = [BitConverter]::ToInt32($Bytes, $sub + 4)
+                    $sub += 8
+                    if ($subId -eq 'icon') {
+                        $iconBytes = New-Object byte[] $subSz
+                        [Array]::Copy($Bytes, $sub, $iconBytes, 0, $subSz)
+                        return $iconBytes
+                    }
+                    $sub += $subSz
+                    if ($subSz % 2 -ne 0) { $sub += 1 }
+                }
+            }
+            $offset += $sz
+        } else {
+            $offset += $sz
+            if ($sz % 2 -ne 0) { $offset += 1 }
+        }
+    }
+    return $null
+}
+
+# --- Conversion d'un fichier curseur en PNG base64 ------------------------
+# Beaucoup de fichiers .cur de cette collection sont en réalité au format
+# ANI (RIFF/ACON) malgré l'extension .cur. On détecte donc le format
+# d'après les premiers octets, indépendamment de l'extension.
+# De plus, System.Drawing.Icon refuse strictement le type=2 (CUR). On force
+# byte[2]=1 (ICO) avant de l'instancier — c'est sans risque pour le rendu.
+function Get-CursorPngBase64 {
+    param([string]$Path, [string]$Ext)
+    try {
+        $bytes = [System.IO.File]::ReadAllBytes($Path)
+        if ($bytes.Length -lt 8) { return $null }
+
+        $head = [System.Text.Encoding]::ASCII.GetString($bytes, 0, 4)
+        if ($head -eq 'RIFF') {
+            # Format ANI : extraire le premier chunk 'icon' (ICO embarqué)
+            $iconBytes = Get-AniFirstIconBytes -Bytes $bytes
+            if (-not $iconBytes -or $iconBytes.Length -lt 4) { return $null }
+            $iconBytes[2] = 1   # ICO
+            $ms   = New-Object System.IO.MemoryStream(,$iconBytes)
+            $icon = New-Object System.Drawing.Icon($ms)
+            $b64  = ConvertTo-PngBase64 -Icon $icon
+            $icon.Dispose()
+            $ms.Dispose()
+            return $b64
+        } else {
+            # Format CUR / ICO direct
+            $copy = [byte[]]::new($bytes.Length)
+            [Array]::Copy($bytes, $copy, $bytes.Length)
+            if ($copy.Length -ge 4) { $copy[2] = 1 }
+            $ms   = New-Object System.IO.MemoryStream(,$copy)
+            $icon = New-Object System.Drawing.Icon($ms)
+            $b64  = ConvertTo-PngBase64 -Icon $icon
+            $icon.Dispose()
+            $ms.Dispose()
+            return $b64
+        }
+    } catch {
+        return $null
+    }
+}
+
+# --- Dimensions d'un .cur (octets 6 et 7) ---------------------------------
+function Get-CurDimensions {
+    param([string]$Path)
+    try {
+        $bytes = [System.IO.File]::ReadAllBytes($Path)
+        if ($bytes.Length -lt 8) { return $null }
+        $w = $bytes[6]; $h = $bytes[7]
+        if ($w -eq 0) { $w = 256 }
+        if ($h -eq 0) { $h = 256 }
+        return "$w x $h"
+    } catch { return $null }
+}
+
+# --- Infos d'un .ani (frames + dimensions) --------------------------------
 function Get-AniInfo {
     param([string]$Path)
     try {
@@ -33,20 +132,18 @@ function Get-AniInfo {
         $br = New-Object System.IO.BinaryReader($fs)
         $riff = [System.Text.Encoding]::ASCII.GetString($br.ReadBytes(4))
         if ($riff -ne 'RIFF') { $br.Close(); return $null }
-        $null = $br.ReadInt32()  # taille
+        $null = $br.ReadInt32()
         $form = [System.Text.Encoding]::ASCII.GetString($br.ReadBytes(4))
         if ($form -ne 'ACON') { $br.Close(); return $null }
-        # Cherche le chunk anih
         while ($fs.Position -lt $fs.Length - 8) {
             $id = [System.Text.Encoding]::ASCII.GetString($br.ReadBytes(4))
             $sz = $br.ReadInt32()
             if ($id -eq 'anih') {
-                # 36 octets : cbSize, nFrames, nSteps, iWidth, iHeight, ...
-                $null      = $br.ReadInt32()
-                $nFrames   = $br.ReadInt32()
-                $null      = $br.ReadInt32()
-                $iWidth    = $br.ReadInt32()
-                $iHeight   = $br.ReadInt32()
+                $null    = $br.ReadInt32()
+                $nFrames = $br.ReadInt32()
+                $null    = $br.ReadInt32()
+                $iWidth  = $br.ReadInt32()
+                $iHeight = $br.ReadInt32()
                 $br.Close()
                 if ($iWidth -eq 0)  { $iWidth = 32 }
                 if ($iHeight -eq 0) { $iHeight = 32 }
@@ -58,38 +155,36 @@ function Get-AniInfo {
         }
         $br.Close()
         return $null
-    } catch {
-        return $null
-    }
+    } catch { return $null }
 }
 
-# --- Mise en forme taille humaine -----------------------------------------
+# --- Taille humaine -------------------------------------------------------
 function Format-Size {
     param([long]$Bytes)
-    if ($Bytes -lt 1024)        { return "$Bytes o" }
-    if ($Bytes -lt 1048576)     { return ("{0:N1} Ko" -f ($Bytes / 1024)) }
+    if ($Bytes -lt 1024)    { return "$Bytes o" }
+    if ($Bytes -lt 1048576) { return ("{0:N1} Ko" -f ($Bytes / 1024)) }
     return ("{0:N1} Mo" -f ($Bytes / 1048576))
 }
 
-# --- Échappement HTML ------------------------------------------------------
+# --- Echappement HTML -----------------------------------------------------
 function Encode-Html {
     param([string]$Text)
-    return $Text.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;').Replace('"', '&quot;')
+    return $Text.Replace('&','&amp;').Replace('<','&lt;').Replace('>','&gt;').Replace('"','&quot;')
 }
 
-# --- Boucle sur les dossiers 000 → 053 ------------------------------------
+# --- Boucle dossiers ------------------------------------------------------
 $folders = Get-ChildItem -LiteralPath $root -Directory | Where-Object { $_.Name -match '^\d{3}$' } | Sort-Object Name
 $totalFolders = $folders.Count
 Write-Host "Dossiers détectés : $totalFolders"
 
-$pageSize = 250   # 1 page = jusqu'à 250 curseurs ; au-delà on pagine
+$pageSize = 250
 $drawerIndex = 0
 
 foreach ($f in $folders) {
     $drawerIndex++
     $files = Get-ChildItem -LiteralPath $f.FullName -File | Where-Object { $_.Extension -in '.ani', '.cur' } | Sort-Object Name
     if ($files.Count -eq 0) {
-        Write-Host ("[{0}/{1}] {2} : vide, ignoré." -f $drawerIndex, $totalFolders, $f.Name)
+        Write-Host ("[{0}/{1}] {2} : vide" -f $drawerIndex, $totalFolders, $f.Name)
         continue
     }
 
@@ -103,7 +198,6 @@ foreach ($f in $folders) {
         $pageFile = if ($p -eq 1) { 'index.html' } else { "page$p.html" }
         $outPath  = Join-Path $f.FullName $pageFile
 
-        # --- Construction de la galerie -----------------------------------
         $cardsHtml = New-Object System.Text.StringBuilder
         foreach ($file in $slice) {
             $name = $file.Name
@@ -118,14 +212,19 @@ foreach ($f in $folders) {
             }
             $dimStr = if ($dim) { "$dim$extra" } else { 'curseur Windows' }
 
-            $href   = [System.Uri]::EscapeDataString($name)
+            # PNG base64 — aperçu universel
+            $b64 = Get-CursorPngBase64 -Path $file.FullName -Ext $file.Extension
+            $imgTag = if ($b64) {
+                "<img src=`"data:image/png;base64,$b64`" alt=`"`" loading=`"lazy`">"
+            } else {
+                ""
+            }
+
+            $href    = [System.Uri]::EscapeDataString($name)
             $nameEsc = Encode-Html $name
-            # cursor: url() permet l'aperçu visuel au survol (Chrome/Edge)
             $cardsHtml.AppendLine(@"
     <div class="cursor-card" style="cursor: url('$href'), auto;">
-      <span class="preview" aria-hidden="true">
-        <img src="$href" alt="" onerror="this.style.display='none'">
-      </span>
+      <span class="preview" aria-hidden="true">$imgTag</span>
       <div class="filename" title="$nameEsc">$nameEsc</div>
       <div class="meta">$size · $dimStr</div>
       <a class="dl" href="$href" download title="Clic droit → Enregistrer sous">⤓ Télécharger</a>
@@ -133,22 +232,22 @@ foreach ($f in $folders) {
 "@) | Out-Null
         }
 
-        # --- Pagination ---------------------------------------------------
+        # Pagination
         $pagerHtml = ''
         if ($pageCount -gt 1) {
             $links = @()
             for ($k = 1; $k -le $pageCount; $k++) {
-                $href = if ($k -eq 1) { 'index.html' } else { "page$k.html" }
+                $h = if ($k -eq 1) { 'index.html' } else { "page$k.html" }
                 if ($k -eq $p) {
                     $links += "<span class='current'>$k</span>"
                 } else {
-                    $links += "<a href='$href'>$k</a>"
+                    $links += "<a href='$h'>$k</a>"
                 }
             }
             $pagerHtml = "<nav class='pagination'>" + ($links -join '') + "</nav>"
         }
 
-        # --- Navigation tiroirs précédents / suivants ---------------------
+        # Liens tiroirs précédent / suivant
         $prevNum = $drawerIndex - 2
         $nextNum = $drawerIndex
         $prevLink = ''
@@ -164,13 +263,13 @@ foreach ($f in $folders) {
         $title = "Tiroir $folderName — $totalFiles curseurs"
         if ($pageCount -gt 1) { $title += " (page $p/$pageCount)" }
 
-        # --- Modèle HTML --------------------------------------------------
         $html = @"
 <!DOCTYPE html>
 <!--
   ============================================================================
   $folderName/$pageFile — Galerie du tiroir $folderName
   Généré automatiquement par assets/generate-folder-pages.ps1
+  Les aperçus sont des PNG (data URL base64) extraits des en-têtes .cur/.ani
   ============================================================================
 -->
 <html lang="fr">
@@ -226,9 +325,10 @@ foreach ($f in $folders) {
         rangés.
         <br>
         Survolez une carte pour voir le pointeur prendre la forme du
-        curseur correspondant. <strong>Clic droit</strong> sur le bouton
-        <em>Télécharger</em> &rarr; <em>Enregistrer la cible sous…</em>
-        pour conserver le fichier.
+        curseur correspondant. <strong>Clic gauche sur l'aperçu</strong>
+        pour agrandir (Echap pour fermer). <strong>Clic droit</strong> sur
+        <em>Télécharger</em> → <em>Enregistrer sous</em> pour conserver
+        le fichier.
       </p>
     </section>
 
@@ -254,7 +354,6 @@ $($cardsHtml.ToString())
 </html>
 "@
 
-        # Écriture en UTF-8 sans BOM
         [System.IO.File]::WriteAllText($outPath, $html, (New-Object System.Text.UTF8Encoding($false)))
     }
 
