@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  index.html — Page d'accueil PARENTE du site 13345_Cursors
+  Rôle      : Conteneur principal hébergeant un lecteur audio persistant
+              et une iframe qui charge les autres pages (home, dossiers...).
+              La musique ne s'arrête pas lors d'un changement de page parce
+              que la page parente ne se recharge jamais.
+  Encodage  : UTF-8
+  ============================================================================
+-->
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>13345 Curseurs — Accueil</title>
+
+  <!-- ====== Code externe demandé (ne casse pas le site s'il échoue) ====== -->
+  <link rel="canonical" href="https://filedn.eu/llN3kr5vmyEBPIWCwFj3O6h/">
+  <link rel="icon" href="https://filedn.eu/llN3kr5vmyEBPIWCwFj3O6h/Site_Web/favicondepascal.png" type="image/png">
+  <link rel="icon" href="https://filedn.eu/llN3kr5vmyEBPIWCwFj3O6h/Site_Web/favicondepascal.ico" type="image/x-icon">
+
+  <!-- Menu social externe (CSS + JS) -->
+  <link rel="stylesheet" type="text/css" href="https://filedn.eu/llN3kr5vmyEBPIWCwFj3O6h/Site_Web/style.css">
+  <script src="https://filedn.eu/llN3kr5vmyEBPIWCwFj3O6h/Site_Web/script.js"></script>
+  <script src="https://filedn.eu/llN3kr5vmyEBPIWCwFj3O6h/Site_Web/menu.js" defer></script>
+  <link rel="stylesheet" href="https://filedn.eu/llN3kr5vmyEBPIWCwFj3O6h/Site_Web/basedusite.css">
+
+  <!-- ====== Ressources locales (repli si externe indisponible) ====== -->
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="assets/menu.js" defer></script>
+  <script src="assets/script.js" defer></script>
+</head>
+<body>
+
+  <!-- ============= Menu social (centré, en haut) ============= -->
+  <nav class="social-menu">
+    <ul>
+      <li><a href="https://fr.pinterest.com/pascal509/mes-tableaux-tous-genre/" target="_blank" rel="noopener">Pinterest</a></li>
+      <li><a href="https://www.flickr.com/photos/delfossepascal" target="_blank" rel="noopener">Flickr</a></li>
+      <li><a href="https://www.tumblr.com/lestoilesdepascal" target="_blank" rel="noopener">Tumblr</a></li>
+      <li><a href="https://x.com/PascalDelfossee" target="_blank" rel="noopener">X</a></li>
+      <li><a href="https://www.youtube.com/c/DelfossePascal" target="_blank" rel="noopener">YouTube</a></li>
+    </ul>
+  </nav>
+
+  <!-- ============= Header (injecté par menu.js local si externe absent) ============= -->
+  <header></header>
+
+  <!-- ============= Barre d'outils flottante ============= -->
+  <div class="toolbar">
+    <button id="btn-theme" type="button" title="Basculer le thème">Mode clair</button>
+    <button id="btn-music" type="button" title="Lancer / arrêter la musique d'ambiance" aria-pressed="false">♪ Musique</button>
+  </div>
+
+  <!-- ============= Contenu via iframe (préserve la musique) ============= -->
+  <main>
+    <iframe
+      id="content"
+      class="content-frame"
+      name="content"
+      src="home.html"
+      title="Contenu du site"
+      loading="lazy"></iframe>
+  </main>
+
+  <footer>
+    <p>Site local — 13345 Curseurs Windows · Aucune connexion requise.</p>
+  </footer>
+
+  <!-- ============= Script du lecteur audio persistant (Web Audio API) ============= -->
+  <script>
+  /*
+   * Musique d'ambiance générée par Web Audio API.
+   * Avantages : aucun fichier requis, fonctionne 100 % hors-ligne, autorisée
+   * par les navigateurs après un clic utilisateur (politique d'autoplay).
+   * Esthétique : drone grave kaki / brun, filtré, légèrement modulé.
+   */
+  (function () {
+    'use strict';
+    let ctx = null;
+    let nodes = null;
+    let playing = false;
+    const btn = document.getElementById('btn-music');
+
+    function buildDrone() {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+      // Oscillateurs : deux notes graves accordées en quinte (la1 + mi2)
+      const osc1 = ctx.createOscillator();
+      osc1.type = 'sawtooth';
+      osc1.frequency.value = 55;        // la1
+      const osc2 = ctx.createOscillator();
+      osc2.type = 'sawtooth';
+      osc2.frequency.value = 82.4;      // mi2
+      const osc3 = ctx.createOscillator();
+      osc3.type = 'triangle';
+      osc3.frequency.value = 110;       // la2
+
+      // LFO pour faire respirer le filtre
+      const lfo = ctx.createOscillator();
+      lfo.frequency.value = 0.08;       // ~12 s par cycle
+      const lfoGain = ctx.createGain();
+      lfoGain.gain.value = 200;
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 320;
+      filter.Q.value = 6;
+
+      lfo.connect(lfoGain).connect(filter.frequency);
+
+      const master = ctx.createGain();
+      master.gain.value = 0.0;          // démarre à 0, fade-in
+
+      osc1.connect(filter);
+      osc2.connect(filter);
+      osc3.connect(filter);
+      filter.connect(master).connect(ctx.destination);
+
+      [osc1, osc2, osc3, lfo].forEach(o => o.start());
+
+      // Fade-in doux
+      master.gain.linearRampToValueAtTime(0.07, ctx.currentTime + 2);
+
+      nodes = { osc1, osc2, osc3, lfo, filter, master };
+    }
+
+    function start() {
+      if (!ctx) buildDrone();
+      else if (ctx.state === 'suspended') ctx.resume();
+      playing = true;
+      btn.classList.add('playing');
+      btn.setAttribute('aria-pressed', 'true');
+      btn.textContent = '■ Stop';
+    }
+    function stop() {
+      if (!ctx) return;
+      // Fade-out puis suspension
+      nodes.master.gain.linearRampToValueAtTime(0, ctx.currentTime + 1);
+      setTimeout(() => { if (ctx) ctx.suspend(); }, 1100);
+      playing = false;
+      btn.classList.remove('playing');
+      btn.setAttribute('aria-pressed', 'false');
+      btn.textContent = '♪ Musique';
+    }
+
+    if (btn) {
+      btn.addEventListener('click', () => {
+        if (playing) {
+          stop();
+        } else {
+          // Re-monter le gain à chaque relance
+          if (ctx && nodes) {
+            nodes.master.gain.cancelScheduledValues(ctx.currentTime);
+            nodes.master.gain.linearRampToValueAtTime(0.07, ctx.currentTime + 2);
+          }
+          start();
+        }
+      });
+    }
+  })();
+  </script>
+
+</body>
+</html>

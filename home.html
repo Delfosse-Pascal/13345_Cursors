@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  home.html — Page d'accueil interne (chargée dans l'iframe de index.html)
+  Affiche l'intro et la grille des 54 dossiers de curseurs.
+  Visible en standalone également (sans iframe) — pleinement autonome.
+  ============================================================================
+-->
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Accueil — 13345 Curseurs</title>
+
+  <!-- Externe -->
+  <link rel="canonical" href="https://filedn.eu/llN3kr5vmyEBPIWCwFj3O6h/">
+  <link rel="icon" href="https://filedn.eu/llN3kr5vmyEBPIWCwFj3O6h/Site_Web/favicondepascal.png" type="image/png">
+  <link rel="icon" href="https://filedn.eu/llN3kr5vmyEBPIWCwFj3O6h/Site_Web/favicondepascal.ico" type="image/x-icon">
+  <link rel="stylesheet" type="text/css" href="https://filedn.eu/llN3kr5vmyEBPIWCwFj3O6h/Site_Web/style.css">
+  <script src="https://filedn.eu/llN3kr5vmyEBPIWCwFj3O6h/Site_Web/script.js"></script>
+  <script src="https://filedn.eu/llN3kr5vmyEBPIWCwFj3O6h/Site_Web/menu.js" defer></script>
+  <link rel="stylesheet" href="https://filedn.eu/llN3kr5vmyEBPIWCwFj3O6h/Site_Web/basedusite.css">
+
+  <!-- Local -->
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="assets/menu.js" defer></script>
+  <script src="assets/script.js" defer></script>
+</head>
+<body>
+
+  <nav class="social-menu">
+    <ul>
+      <li><a href="https://fr.pinterest.com/pascal509/mes-tableaux-tous-genre/" target="_blank" rel="noopener">Pinterest</a></li>
+      <li><a href="https://www.flickr.com/photos/delfossepascal" target="_blank" rel="noopener">Flickr</a></li>
+      <li><a href="https://www.tumblr.com/lestoilesdepascal" target="_blank" rel="noopener">Tumblr</a></li>
+      <li><a href="https://x.com/PascalDelfossee" target="_blank" rel="noopener">X</a></li>
+      <li><a href="https://www.youtube.com/c/DelfossePascal" target="_blank" rel="noopener">YouTube</a></li>
+    </ul>
+  </nav>
+
+  <header></header>
+
+  <div class="toolbar">
+    <button id="btn-theme" type="button" title="Basculer le thème">Mode clair</button>
+  </div>
+
+  <main>
+
+    <section class="context">
+      <p>
+        <strong>Bienvenue.</strong> Vous explorez une collection de
+        <strong>13 345 curseurs Windows</strong> classés automatiquement en
+        <strong>54 tiroirs</strong> de 250 fichiers chacun. Chaque tiroir
+        renferme une sélection variée de pointeurs animés
+        (<code>.ani</code>) et statiques (<code>.cur</code>) issus de sources
+        publiques diverses.
+      </p>
+      <p>
+        Cliquez sur un tiroir ci-dessous pour découvrir ses curseurs,
+        les prévisualiser, et les enregistrer sur votre machine d'un
+        <strong>clic droit → Enregistrer sous</strong>.
+      </p>
+    </section>
+
+    <!-- ============ Bonus : téléchargement du script de rangement ============ -->
+    <aside class="install-notice">
+      <h3>Bonus — Script de rangement</h3>
+      <p>
+        Un petit utilitaire <em>Batch Windows</em> est inclus :
+        il range automatiquement n'importe quel ensemble de fichiers
+        en tiroirs numérotés de 250 fichiers chacun. C'est ce script qui
+        a servi à organiser cette collection.
+      </p>
+      <p style="text-align:center;">
+        <a class="btn-home" style="position:static;"
+           href="040/rangement -par 250 UNIVERSELLE .bat"
+           download>⤓ Télécharger le script .bat</a>
+      </p>
+    </aside>
+
+    <!-- ============ Notice rapide d'installation ============ -->
+    <aside class="install-notice">
+      <h3>Comment se servir &amp; installer un curseur</h3>
+      <ol>
+        <li>
+          Choisissez un dossier (un « tiroir ») dans la grille ci-dessous,
+          parcourez la galerie et survolez les cartes : le pointeur
+          de votre souris prend l'apparence du curseur sous le pointeur.
+        </li>
+        <li>
+          Faites <kbd>Clic droit</kbd> sur le bouton <em>Télécharger</em>
+          d'un curseur, puis choisissez
+          <kbd>Enregistrer la cible du lien sous…</kbd>
+          (ou <kbd>Enregistrer sous…</kbd>) pour le conserver sur votre PC.
+        </li>
+        <li>
+          Sous Windows : <kbd>Clic droit</kbd> sur le fichier
+          <code>.cur</code> ou <code>.ani</code> téléchargé, puis
+          <kbd>Installer</kbd> dans le menu contextuel.
+        </li>
+        <li>
+          Ou alors : <strong>Panneau de configuration → Souris →
+          onglet Pointeurs</strong>, sélectionnez un rôle (Sélection
+          normale, Aide, etc.), cliquez <kbd>Parcourir…</kbd> et choisissez
+          le curseur. <kbd>Enregistrer sous…</kbd> pour créer votre schéma.
+        </li>
+      </ol>
+    </aside>
+
+    <!-- ============ Grille des 54 tiroirs ============ -->
+    <h2 style="text-align:center; font-family: var(--font-title); color: var(--accent); letter-spacing: 0.06em;">
+      Les 54 tiroirs
+    </h2>
+
+    <div class="thumb-grid" id="drawers">
+      <!-- Les miniatures seront injectées par script ci-dessous, pour
+           rester compactes. Chaque tiroir reçoit une forme différente
+           (cercle / carré / rectangle / penché) en alternance. -->
+    </div>
+
+  </main>
+
+  <footer>
+    <p>54 tiroirs · 13 345 curseurs · Page locale autonome.</p>
+  </footer>
+
+  <script>
+  /* ----------------------------------------------------------------------
+     Génération des 54 miniatures :
+     - Numéro 000 → 053
+     - Forme alternée (4 styles) → variété visuelle
+     - Lien vers <num>/index.html (chargé dans la même iframe / fenêtre)
+     ---------------------------------------------------------------------- */
+  (function () {
+    'use strict';
+    const grid = document.getElementById('drawers');
+    if (!grid) return;
+    const shapes = ['shape-square', 'shape-circle', 'shape-rect', 'shape-tilt'];
+    const labels = [
+      'pointeurs', 'flèches', 'animés', 'fantaisie',
+      'classique', 'jeux', 'lettres', 'symboles',
+      'météo', 'animaux', 'nature', 'objets',
+      'visages', 'créatures', 'effets', 'divers'
+    ];
+
+    for (let i = 0; i < 54; i++) {
+      const num = String(i).padStart(3, '0');
+      const a = document.createElement('a');
+      a.className = 'thumb ' + shapes[i % shapes.length];
+      a.href = num + '/index.html';
+      a.innerHTML =
+        '<span>' + num + '</span>' +
+        '<span class="thumb-label">tiroir ' + (i + 1) + ' / 54<br>' +
+        '<small>(' + labels[i % labels.length] + ')</small></span>';
+      grid.appendChild(a);
+    }
+  })();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,495 @@
+/* =============================================================================
+   style.css — Feuille de styles partagée pour le site 13345_Cursors
+   Palette : kaki, gris sale, noir, brun
+   Motifs  : rayures, papier froissé, bruit visuel, typographie abîmée
+   ============================================================================= */
+
+/* ---- Polices calligraphiques (avec repli système) -------------------------- */
+@import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Pirata+One&family=UnifrakturCook:wght@700&display=swap');
+
+:root {
+  /* Mode sombre (par défaut) */
+  --bg:            #1a1814;
+  --bg-soft:       #25211b;
+  --bg-card:       #2c2820;
+  --text:          #c8bf9d;
+  --text-dim:      #8d8666;
+  --accent:        #b8a560;   /* kaki clair */
+  --accent-2:      #8b7d4a;   /* kaki moyen */
+  --accent-3:      #5c4a3a;   /* brun */
+  --accent-4:      #5a564e;   /* gris sale */
+  --border:        #4a4536;
+  --shadow:        rgba(0, 0, 0, 0.75);
+  --noise-opacity: 0.07;
+
+  /* Polices */
+  --font-title:  'UnifrakturCook', 'Pirata One', 'Papyrus', cursive, fantasy;
+  --font-body:   'IM Fell English', 'Garamond', 'Georgia', serif;
+  --font-mono:   'Courier New', monospace;
+}
+
+/* Mode clair */
+:root[data-theme="light"] {
+  --bg:            #d7c9a7;   /* kaki délavé */
+  --bg-soft:       #c5b894;
+  --bg-card:       #e3d8b9;
+  --text:          #2a2620;
+  --text-dim:      #594f3d;
+  --accent:        #5c4a3a;
+  --accent-2:      #8b7d4a;
+  --accent-3:      #3d2f25;
+  --accent-4:      #6e6857;
+  --border:        #8b7d4a;
+  --shadow:        rgba(40, 30, 20, 0.4);
+  --noise-opacity: 0.12;
+}
+
+/* ---- Reset léger ----------------------------------------------------------- */
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ---- Bruit / texture papier froissé (overlay global) ----------------------- */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: var(--noise-opacity);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size: 240px 240px;
+  mix-blend-mode: overlay;
+}
+
+/* ---- Rayures de fond ------------------------------------------------------- */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      transparent 0,
+      transparent 38px,
+      rgba(0, 0, 0, 0.04) 38px,
+      rgba(0, 0, 0, 0.04) 40px
+    );
+}
+
+main, header, nav, .container { position: relative; z-index: 2; }
+
+/* ---- Header partagé -------------------------------------------------------- */
+.site-header {
+  text-align: center;
+  padding: 1.2rem 1rem 0.6rem;
+  border-bottom: 1px dashed var(--border);
+  background: linear-gradient(180deg, var(--bg-soft), transparent);
+}
+
+.site-header h1 {
+  font-family: var(--font-title);
+  font-size: clamp(2rem, 5vw, 3.6rem);
+  margin: 0.2rem 0;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  text-shadow:
+    2px 2px 0 var(--accent-3),
+    4px 4px 8px var(--shadow);
+  animation: titleSway 9s ease-in-out infinite;
+}
+.site-header p.subtitle {
+  font-style: italic;
+  color: var(--text-dim);
+  margin: 0.2rem 0 0.6rem;
+}
+
+@keyframes titleSway {
+  0%, 100% { transform: rotate(-0.4deg); }
+  50%      { transform: rotate(0.4deg); }
+}
+
+/* ---- Menu social (centré, en haut) ----------------------------------------- */
+.social-menu {
+  text-align: center;
+  padding: 0.6rem 0;
+  background: var(--bg-soft);
+  border-bottom: 1px solid var(--border);
+}
+.social-menu ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+}
+.social-menu a {
+  font-family: var(--font-title);
+  color: var(--accent);
+  text-decoration: none;
+  padding: 0.2rem 0.6rem;
+  border: 1px dashed transparent;
+  transition: all 0.25s;
+  letter-spacing: 0.05em;
+}
+.social-menu a:hover {
+  color: var(--bg);
+  background: var(--accent);
+  border-color: var(--accent-3);
+  transform: translateY(-2px) rotate(-1deg);
+}
+
+/* Le menu injecté par menu.js externe (s'il charge) */
+header:empty { display: none; }
+
+/* ---- Barre d'outils flottante (thème, musique, retour) --------------------- */
+.toolbar {
+  position: fixed;
+  top: 0.6rem;
+  right: 0.8rem;
+  z-index: 100;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.toolbar button,
+.btn-home {
+  font-family: var(--font-title);
+  font-size: 1rem;
+  background: var(--bg-card);
+  color: var(--accent);
+  border: 2px solid var(--border);
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.toolbar button:hover,
+.btn-home:hover {
+  background: var(--accent);
+  color: var(--bg);
+  transform: scale(1.05) rotate(-2deg);
+}
+
+/* Bouton musique multicolore */
+#btn-music {
+  background: conic-gradient(
+    from 0deg,
+    #b8a560, #8b5c3a, #4a6e4a, #5c4a8b,
+    #8b3a4a, #6e6857, #b8a560
+  );
+  color: #fff;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px #000;
+  border: 2px solid #000;
+  animation: musicSpin 8s linear infinite;
+}
+#btn-music.playing {
+  box-shadow: 0 0 12px var(--accent), 0 0 24px var(--accent-2);
+}
+@keyframes musicSpin {
+  to { transform: rotate(360deg); }
+}
+#btn-music:hover { animation-play-state: paused; }
+
+/* ---- Bouton retour --------------------------------------------------------- */
+.btn-home {
+  position: fixed;
+  bottom: 1rem;
+  left: 1rem;
+  z-index: 100;
+}
+
+/* ---- Conteneur principal --------------------------------------------------- */
+main, .container {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 1.5rem 1.2rem 5rem;
+}
+
+.context {
+  font-style: italic;
+  color: var(--text-dim);
+  text-align: center;
+  max-width: 720px;
+  margin: 1rem auto 2rem;
+  padding: 1rem;
+  border-left: 3px solid var(--accent-3);
+  border-right: 3px solid var(--accent-3);
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* ---- Grille de miniatures (page d'accueil) --------------------------------- */
+.thumb-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+.thumb {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  text-decoration: none;
+  color: var(--text);
+  font-family: var(--font-title);
+  font-size: 1.4rem;
+  overflow: hidden;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+.thumb .thumb-label {
+  font-size: 1rem;
+  color: var(--text-dim);
+  margin-top: 0.3rem;
+  font-family: var(--font-body);
+  font-style: italic;
+}
+.thumb:hover {
+  transform: translateY(-6px) rotate(-1deg);
+  border-color: var(--accent);
+  background: var(--bg-soft);
+  color: var(--accent);
+  box-shadow: 0 8px 20px var(--shadow);
+}
+/* Formes variées : modulo permet d'alterner */
+.thumb.shape-circle  { border-radius: 50%; }
+.thumb.shape-square  { border-radius: 8px; }
+.thumb.shape-rect    { aspect-ratio: 4 / 3; border-radius: 4px; }
+.thumb.shape-tilt    { transform: rotate(-2deg); }
+.thumb.shape-tilt:hover { transform: rotate(0deg) translateY(-6px); }
+
+.thumb::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent 0 6px,
+    rgba(255, 255, 255, 0.03) 6px 7px
+  );
+  pointer-events: none;
+}
+
+/* ---- Galerie de curseurs --------------------------------------------------- */
+.cursor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.8rem;
+}
+.cursor-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 0.6rem;
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+}
+.cursor-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px var(--shadow);
+  border-color: var(--accent);
+}
+.cursor-card .preview {
+  display: inline-block;
+  width: 64px;
+  height: 64px;
+  background: var(--bg-soft);
+  border: 1px dashed var(--border);
+  margin-bottom: 0.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.cursor-card .preview img {
+  max-width: 64px;
+  max-height: 64px;
+  image-rendering: pixelated;
+}
+/* Marqueur "?" affiché uniquement si l'image n'a pas pu se charger */
+.cursor-card .preview:has(img[style*="display: none"])::after,
+.cursor-card .preview:not(:has(img))::after {
+  content: "?";
+  position: absolute;
+  font-family: var(--font-title);
+  color: var(--text-dim);
+  font-size: 2rem;
+  opacity: 0.5;
+}
+.cursor-card .filename {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text);
+  word-break: break-all;
+  margin-bottom: 0.2rem;
+}
+.cursor-card .meta {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  font-style: italic;
+}
+.cursor-card a.dl {
+  display: inline-block;
+  margin-top: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--accent);
+  text-decoration: none;
+  border: 1px dashed var(--border);
+  padding: 0.2rem 0.5rem;
+  font-family: var(--font-title);
+}
+.cursor-card a.dl:hover {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+/* ---- Pagination ------------------------------------------------------------ */
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+  margin: 2rem 0 1rem;
+}
+.pagination a, .pagination span {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--border);
+  text-decoration: none;
+  color: var(--text);
+  font-family: var(--font-title);
+  background: var(--bg-card);
+}
+.pagination a:hover { background: var(--accent); color: var(--bg); }
+.pagination .current { background: var(--accent); color: var(--bg); }
+
+/* ---- Iframe (page parente uniquement) -------------------------------------- */
+.content-frame {
+  display: block;
+  width: 100%;
+  height: calc(100vh - 200px);
+  border: none;
+  background: var(--bg);
+}
+
+/* ---- Lightbox (image / preview agrandi) ------------------------------------ */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.92);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  flex-direction: column;
+  gap: 1rem;
+  animation: fadeIn 0.3s;
+}
+.lightbox.open { display: flex; }
+.lightbox img {
+  max-width: 90vw;
+  max-height: 80vh;
+  border: 3px solid var(--accent);
+  box-shadow: 0 0 60px rgba(184, 165, 96, 0.4);
+  image-rendering: pixelated;
+}
+.lightbox .lb-info {
+  color: var(--text);
+  font-family: var(--font-mono);
+  text-align: center;
+}
+.lightbox .lb-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: var(--bg-card);
+  border: 2px solid var(--accent);
+  color: var(--accent);
+  font-size: 1.5rem;
+  padding: 0.3rem 0.8rem;
+  cursor: pointer;
+  font-family: var(--font-title);
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ---- Animations divers ----------------------------------------------------- */
+.fade-in {
+  animation: rise 0.6s ease-out backwards;
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Notice install curseur ------------------------------------------------ */
+.install-notice {
+  background: var(--bg-card);
+  border: 2px dashed var(--accent-3);
+  padding: 1rem 1.2rem;
+  margin: 1.5rem 0;
+  font-size: 0.95rem;
+}
+.install-notice h3 {
+  font-family: var(--font-title);
+  color: var(--accent);
+  margin-top: 0;
+}
+.install-notice kbd {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+/* ---- Pied de page ---------------------------------------------------------- */
+footer {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--text-dim);
+  font-style: italic;
+  border-top: 1px dashed var(--border);
+  margin-top: 3rem;
+}
+
+/* ---- Animation flottante optionnelle --------------------------------------- */
+.float { animation: float 4s ease-in-out infinite; }
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+
+/* ---- Responsive ------------------------------------------------------------ */
+@media (max-width: 600px) {
+  .toolbar { top: auto; bottom: 4rem; right: 0.5rem; }
+  .btn-home { left: 0.5rem; bottom: 0.5rem; }
+  .thumb-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  .cursor-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+}
