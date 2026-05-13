@@ -1,0 +1,110 @@
+# =============================================================================
+# .gitignore — Dépôt 13345_Cursors
+# Exclusions : médias, archives, ebooks, et sous-dossiers profonds (>1 niveau).
+# Objectif   : ne versionner QUE les curseurs (.ani / .cur) et scripts texte.
+# =============================================================================
+
+# ---- Images -----------------------------------------------------------------
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tif
+*.tiff
+*.webp
+*.svg
+*.heic
+*.heif
+*.raw
+*.psd
+*.ai
+*.eps
+
+# ---- Documents PDF ----------------------------------------------------------
+*.pdf
+
+# ---- Vidéos -----------------------------------------------------------------
+*.mp4
+*.avi
+*.mkv
+*.mov
+*.wmv
+*.flv
+*.webm
+*.mpg
+*.mpeg
+*.m4v
+*.3gp
+
+# ---- Archives ---------------------------------------------------------------
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz
+*.bz2
+*.xz
+*.tgz
+*.tbz2
+*.iso
+*.cab
+
+# ---- Audio / Musique --------------------------------------------------------
+*.mp3
+*.wav
+*.flac
+*.ogg
+*.m4a
+*.aac
+*.wma
+*.opus
+*.mid
+*.midi
+
+# ---- Ebooks -----------------------------------------------------------------
+*.epub
+*.mobi
+*.azw
+*.azw3
+*.fb2
+*.djvu
+*.lit
+*.lrf
+*.pdb
+
+# ---- Curseurs Windows -------------------------------------------------------
+*.ani
+*.cur
+
+# ---- Polices de caractères --------------------------------------------------
+*.ttf
+*.otf
+*.ttc
+*.woff
+*.woff2
+*.eot
+*.fon
+*.fnt
+*.pfa
+*.pfb
+*.pfm
+*.afm
+*.bdf
+*.psf
+*.dfont
+
+# ---- Sous-dossiers de profondeur >1 -----------------------------------------
+# Les dossiers racine sont autorisés (ex: images/) ;
+# Tout sous-dossier à l'intérieur (ex: images/photos/) est ignoré,
+# ainsi que tout ce qu'il contient.
+*/*/
+*/*/**
+
+# ---- Fichiers système / temporaires -----------------------------------------
+Thumbs.db
+Desktop.ini
+.DS_Store
+*.tmp
+*.bak
+~$*
